@@ -1,7 +1,17 @@
 const Post = require("../../models/Post");
 const { UserInputError, AuthenticationError } = require("apollo-server");
-
+import badWords from "../../bad_words.json";
 const checkAuth = require("../../util/check-auth");
+
+const checkBad = (body) => {
+  // check if the body contains bad words
+  const badWordsFound = badWords.filter((word) => body.includes(word));
+  if (badWordsFound.length > 0) {
+    throw new UserInputError(
+      `The following words are not allowed: ${badWordsFound.join(", ")}`
+    );
+  }
+};
 
 module.exports = {
   Query: {
@@ -31,9 +41,13 @@ module.exports = {
     async createPost(_, { body }, context) {
       const user = checkAuth(context);
 
+      console.log(body);
+
       if (body.trim() === "") {
         throw new Error("Post body cannot be empty");
       }
+
+      checkBad(body);
 
       const newPost = new Post({
         body,
