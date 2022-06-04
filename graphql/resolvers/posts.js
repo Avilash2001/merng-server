@@ -1,6 +1,6 @@
 const Post = require("../../models/Post");
 const { UserInputError, AuthenticationError } = require("apollo-server");
-import badWords from "../../bad_words.json";
+import badWords from "./../../util/badWords";
 const checkAuth = require("../../util/check-auth");
 
 const checkBad = (body) => {
