@@ -1,6 +1,17 @@
 const Post = require("../../models/Post");
 const checkAuth = require("../../util/check-auth");
 const { UserInputError, AuthenticationError } = require("apollo-server");
+var badWords = require("badwords/array");
+
+const checkBad = (body) => {
+  // check if the body contains bad words
+  const badWordsFound = badWords.filter((word) => body.includes(word));
+  if (badWordsFound.length > 0) {
+    throw new UserInputError(
+      `The following words are not allowed: ${badWordsFound.join(", ")}`
+    );
+  }
+};
 
 module.exports = {
   Mutation: {
@@ -13,6 +24,8 @@ module.exports = {
           },
         });
       }
+
+      checkBad(body);
 
       const post = await Post.findById(postId);
 
