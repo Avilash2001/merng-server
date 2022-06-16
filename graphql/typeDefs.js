@@ -30,6 +30,7 @@ module.exports = gql`
     email: String!
     token: String!
     username: String!
+    strikes: Int
     createdAt: String!
   }
   input RegisterInput {

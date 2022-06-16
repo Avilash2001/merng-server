@@ -1,17 +1,35 @@
 const Post = require("../../models/Post");
+const User = require("../../models/User");
 const { UserInputError, AuthenticationError } = require("apollo-server");
 var badWords = require("badwords/array");
 const checkAuth = require("../../util/check-auth");
 
-const checkBad = (body) => {
+const checkBad = async (body, user_id) => {
   // check if the body contains bad words
-  const lower = body.toLowerCase();
-  const lowerTrimmed = lower.trim();
-  const badWordsFound = badWords.filter((word) => lowerTrimmed.includes(word));
-  if (badWordsFound.length > 0) {
-    throw new UserInputError(
-      `The following words are not allowed: ${badWordsFound.join(", ")}`
+  try {
+    const lower = body.toLowerCase();
+    const lowerTrimmed = lower.trim();
+    const badWordsFound = badWords.filter((word) =>
+      lowerTrimmed.includes(word)
     );
+    if (badWordsFound.length > 0) {
+      const author = await User.findById(user_id);
+      author.strikes += 1;
+      await author.save();
+
+      if (author.strikes < 3) {
+        throw new UserInputError(
+          `The following words are not allowed: ${badWordsFound.join(
+            ", "
+          )}. Strikes left: ${3 - author.strikes}`
+        );
+      }
+      throw new UserInputError(
+        `You have been banned for inappropriate behavior.`
+      );
+    }
+  } catch (err) {
+    throw new Error(err.message);
   }
 };
 
@@ -49,7 +67,7 @@ module.exports = {
         throw new Error("Post body cannot be empty");
       }
 
-      checkBad(body);
+      await checkBad(body, user.id);
 
       const newPost = new Post({
         body,

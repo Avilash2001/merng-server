@@ -46,6 +46,13 @@ module.exports = {
         });
       }
 
+      if (user?.strikes >= 3) {
+        errors.general = "You are banned for inappropriate behavior";
+        throw new UserInputError("You are banned for inappropriate ", {
+          errors,
+        });
+      }
+
       // Compare passwords
 
       const match = await bcrypt.compare(password, user.password);
@@ -89,7 +96,7 @@ module.exports = {
 
       // Make sure user doesnot exist
 
-      const user = await User.findOne({ username });
+      const user = await User.findOne({ username, email });
       if (user) {
         throw new UserInputError("Username Taken!", {
           errors: {
@@ -105,6 +112,7 @@ module.exports = {
         email,
         username,
         password,
+        strikes: 0,
         createdAt: new Date().toISOString(),
       });
 
